@@ -191,6 +191,11 @@ int main() {
       (jp_shape_t){.type = JP_SHAPE_AABB,
                    .bounds.aabb = {INT_TO_FIXED(10), INT_TO_FIXED(10)}},
       INT_TO_FIXED(60), INT_TO_FIXED(50), INT_TO_FIXED(2));
+  jp_world_add_body(
+      &world,
+      (jp_shape_t){.type = JP_SHAPE_AABB,
+                   .bounds.aabb = {INT_TO_FIXED(10), INT_TO_FIXED(10)}},
+      INT_TO_FIXED(45), INT_TO_FIXED(25), INT_TO_FIXED(2));
 
   // 4. Free Falling Circle (Right)
   jp_world_add_body(&world,

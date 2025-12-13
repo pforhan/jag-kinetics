@@ -5,13 +5,12 @@ A simple, lightweight, fixed-point 2D physics engine written in C, designed for 
 ## Features
 
 - **Fixed-Point Arithmetic**: Uses 16.16 fixed-point math (`jag_fixed.h`) to avoid costly floating-point operations on the Jaguar's 68000.
-- **Rigid Body Physics**: Supports position, velocity, acceleration, and mass.
+- **Rigid Body Physics**: Supports linear physics (position, velocity, acceleration, mass). **Note**: Rotation/Torque is not currently supported.
 - **Collision Detection**:
   - Circle-to-Circle
   - AABB-to-AABB
   - Circle-to-AABB
-  - Circle-to-AABB
-- **Collision Resolution**: Impulse-based resolution with restitution (bounciness) and positional correction.
+- **Collision Resolution**: Impulse-based resolution for linear velocity (no angular effects) with restitution (bounciness) and positional correction.  Circle objects involved in collisions will scatter at the correct angle, but AABB objects will not.
 - **Distance Constraints (Tethers)**: Supports massless, soft-constraint tethers between bodies (e.g., pendulums, bridges).
 - **Portable**: Written in pure C99.
 - **GPU-Ready**: Data structures aligned (16-byte) and logic isolated for easy offloading to the Jaguar's RISC processors.
