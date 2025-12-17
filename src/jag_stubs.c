@@ -1,0 +1,23 @@
+#include <stddef.h>
+
+// Stubs for stdlib functions
+int abs(int i) { return i < 0 ? -i : i; }
+
+void bcopy(const void *src, void *dest, size_t n) {
+  char *d = dest;
+  const char *s = src;
+  while (n--) {
+    *d++ = *s++;
+  }
+}
+
+// Stubs for stdio functions
+int printf(const char *format, ...) {
+  (void)format;
+  return 0;
+}
+
+int putchar(int c) {
+  (void)c;
+  return 0;
+}

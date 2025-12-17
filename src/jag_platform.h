@@ -1,7 +1,7 @@
 #ifndef JAG_PLATFORM_H
 #define JAG_PLATFORM_H
 
-#include <stdint.h>
+#include "include/stdint.h"
 
 // Memory Map
 #define JAG_DRAM_BASE 0x00000000
