@@ -18,7 +18,7 @@ SRC_C_COMMON = src/demo_main.c src/jag_physics.c src/demo_bitmap.c src/jag_gpu.c
 SRC_C_JAGUAR = src/jag_stubs.c src/jag_main.c
 SRC_C_PC = src/string.c src/stdlib.c src/stdio.c
 SRC_C = $(SRC_C_COMMON) $(SRC_C_JAGUAR)
-SRC_S =
+SRC_S = src/jag_startup.s
 
 # PC Build Configuration
 CC_PC = gcc
@@ -50,7 +50,7 @@ CFLAGS += -std=c99 -mshort -Wall -fno-builtin -nostdinc -Isrc/include -Isrc -DJA
 LINKFLAGS +=
 
 # Objects
-OBJS = $(SRC_C:.c=.o) $(SRC_S:.s=.o)
+OBJS = $(SRC_S:.s=.o) $(SRC_C:.c=.o)
 
 # Linker Rule (relies on jagrules.mk for standard libs/startup)
 # We manually specify the link command here if needed, or rely on rules.

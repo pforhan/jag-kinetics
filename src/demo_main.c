@@ -10,7 +10,8 @@
 
 #ifdef JAGUAR
 // Jaguar specific setup
-uint16_t *video_buffer = (uint16_t *)JAG_DRAM_BASE; // Simplified
+// Ensure video_buffer is 8-byte aligned for the Object Processor
+uint16_t video_buffer[SCREEN_WIDTH * SCREEN_HEIGHT] __attribute__((aligned(8)));
 #else
 // PC Simulation setup
 uint16_t video_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
@@ -18,17 +19,74 @@ uint16_t video_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 
 demo_bitmap_t screen;
 
+#ifdef JAGUAR
+// Minimal Object Processor List (Bitmap + Stop)
+// Each object is 64 bits (8 bytes), but Bitmap is usually 16 or 24 bytes.
+// We'll use a simple 16-bit 320x240 bitmap object.
+uint32_t ol_list[8] __attribute__((aligned(8)));
+
+void BuildObjectList() {
+  // Clear list
+  for (int i = 0; i < 8; i++)
+    ol_list[i] = 0;
+
+  // Bitmap Object (See Jaguar Reference Manual for bitfields)
+  // Type = 0 (Bitmap), Y = 0, Height = 240, X = 0, Width = 320
+  // Data = video_buffer, Depth = 4 (16-bit), etc.
+
+  uint32_t lo = 0;
+  uint32_t hi = 0;
+
+  // Low 32 bits: Type(3), Y(11), Height(10), Link(14? No, Link is in high bits)
+  // Actually, simplified layout:
+  // [63:36] Link, [35:24] Data, ... this is complex to do by hand perfectly.
+  // Standard 64-bit Bitmap Object:
+  // Word 0: [0-2] Type, [3-13] YPos, [14-23] Height, [24-38] Link...
+  // Word 1: [0-20] Data Address, [21-23] Reserved, [24-29] Width, [30-31]
+  // Reserved...
+
+  // Let's use a simpler approach:
+  // Word 0: Type=BITOBJ(0), Y=0, Height=240, Link=Next (ol_list + 2)
+  uint32_t link = ((uint32_t)(&ol_list[2])) >> 3;
+  ol_list[0] = 0 | (0 << 3) | (240 << 14) | (link << 24);
+  ol_list[1] = (0 << 0) | (link >> 8); // Link spillover
+
+  // Word 1 (next 64 bits): Data, Pitch, Depth, X...
+  // [0-20] Data, [21-23] reserved, [24-33] X, [34-36] Depth, [37-45] Width...
+  ol_list[2] = ((uint32_t)video_buffer) & 0xFFFFFFF8;
+  ol_list[3] = (0 << 8) | (4 << 10) | ((320 / 8) << 13) |
+               (1 << 28); // 16-bit, width 320, IAGD=1
+
+  // Stop Object
+  ol_list[4] = 4; // Type 4 = STOP
+  ol_list[5] = 0;
+}
+#endif
+
 void InitVideo() {
   screen.pixels = video_buffer;
   screen.width = SCREEN_WIDTH;
   screen.height = SCREEN_HEIGHT;
 
 #ifdef JAGUAR
-// Setup VI (Video Interface) registers here
-// This is pseudo-code for what you'd actually do
-// VI_HWIDTH = SCREEN_WIDTH;
-// VI_VHEIGHT = SCREEN_HEIGHT;
-// VI_CONTROL = ...;
+  // 1. Set Timings
+  VI_HPERIOD = NTSC_HPERIOD;
+  VI_HBB = NTSC_HBB;
+  VI_HBE = NTSC_HBE;
+  VI_HSYNC = NTSC_HSYNC;
+
+  VI_VPERIOD = NTSC_VPERIOD;
+  VI_VBB = NTSC_VBB;
+  VI_VBE = NTSC_VBE;
+  VI_VSYNC = NTSC_VSYNC;
+
+  // 2. Build Object List
+  BuildObjectList();
+  OP_LIST_PTR = (uint32_t)ol_list;
+
+  // 3. Enable Video (16-bit RGB)
+  VI_VMODE = 0x0001;  // RGB16
+  VI_BCOLOR = 0x0000; // Black background
 #endif
 }
 
