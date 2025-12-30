@@ -1,105 +1,85 @@
-# Jaguar Physics Engine
+# Alpha Kinetics
 
-A simple, lightweight, fixed-point 2D physics engine written in C, designed for the Atari Jaguar.
+A portable, lightweight, fixed-point 2D physics engine written in C99. Designed for retro consoles and embedded systems (Atari Jaguar, Arduboy FX, Playdate).
 
 ## Features
 
-- **Fixed-Point Arithmetic**: Uses 16.16 fixed-point math (`jag_fixed.h`) to avoid costly floating-point operations on the Jaguar's 68000.
-- **Rigid Body Physics**: Supports linear physics (position, velocity, acceleration, mass). **Note**: Rotation/Torque is not currently supported.
-- **Collision Detection**:
+- **Fixed-Point Arithmetic**: Uses 16.16 fixed-point math (`ak_fixed.h`) to ensure consistent behavior across platforms without an FPU.
+- **Rigid Body Physics**: Supports linear physics (position, velocity, acceleration, mass).
+- **Collision Detection**: 
   - Circle-to-Circle
   - AABB-to-AABB
   - Circle-to-AABB
-- **Collision Resolution**: Impulse-based resolution for linear velocity (no angular effects) with restitution (bounciness) and positional correction.  Circle objects involved in collisions will scatter at the correct angle, but AABB objects will not.
-- **Distance Constraints (Tethers)**: Supports massless, soft-constraint tethers between bodies (e.g., pendulums, bridges).
-- **Portable**: Written in pure C99.
-- **GPU-Ready**: Data structures aligned (16-byte) and logic isolated for easy offloading to the Jaguar's RISC processors.
-- **Dual Target**:
-  - **PC**: Compiles to a terminal-based simulation (ASCII output) for logic verification.
-  - **Jaguar**: Compiles to a binary using standard Jaguar toolchains (e.g., `m68k-atari-jaguar-gcc`).
+- **Collision Resolution**: Impulse-based resolution with restitution (bounciness) and positional correction.
+- **Distance Constraints (Tethers)**: Supports massless, soft-constraint tethers (pendulums, chains).
+- **Platform Agnostic Core**: Logic isolated in `src/core`, platform specific code in `src/platforms`.
 
-## File Structure
+## Project Structure
 
-- `src/demo_main.c`: Entry point. Handles setup and main loop for the demo.
-- `src/jag_physics.c` / `.h`: Core physics engine (`jp_*` prefix).
-- `src/jag_fixed.h`: Math macros and functions.
-- `src/jag_gpu.c` / `.h`: GPU interface and mock implementation.
-- `src/jag_platform.h`: Platform-specific definitions.
-- `src/demo_bitmap.c` / `.h`: Simple graphics routines for the framebuffer (used in demo).
+- `src/core/`: Platform-independent library.
+  - `ak_physics.c/.h`: Core solver and API.
+  - `ak_fixed.h`: Fixed-point math macros.
+  - `ak_demo_setup.c/.h`: Shared scene configurations for demos.
+- `src/platforms/`: Platform-specific entry points and rendering.
+  - `jaguar/`: Atari Jaguar demo (using `rmvlib`).
+  - `pc/`: Terminal-based ASCII simulation.
+  - `arduboy/`: Arduboy FX demo boilerplate.
+  - `playdate/`: Playdate C SDK demo boilerplate.
 
-## Development Environment
+## Getting Started
 
-This project includes a **Devcontainer** configuration for VS Code.
-- It automatically instantiates a Docker container with the [cubanismo/jaguar-sdk](https://github.com/cubanismo/jaguar-sdk).
-- Opening the folder in VS Code and choosing "Reopen in Container" will provide a terminal with `m68k-atari-jaguar-gcc` pre-installed.
-
-## Building
-
-### For PC (Simulation)
-If you have GCC or a similar C compiler installed:
+### For PC (ASCII Simulation)
+Quickly test logic in your terminal:
 ```bash
-make
-./jag_physics_pc
+make pc
+./alpha_kinetics_pc
 ```
-This will run the physics simulation and output ASCII frames to the terminal.
 
-### For Jaguar (Console)
-Requires `m68k-atari-jaguar-gcc` in your PATH.
+### For Atari Jaguar
+Builds for the console using `m68k-atari-mint-gcc`:
 ```bash
 make jaguar
 ```
-This produces `jag_physics.cof`.
+Produces `alpha_kinetics_jag.cof`.
 
-## Usage
+### For Arduboy FX
+Integration via Arduino IDE or PlatformIO:
+1. Include `src/core/ak_physics.h` and `.c`.
+2. Define `-DAK_MAX_BODIES=16` to save RAM.
+3. Link with `Arduboy2` and `ArduboyFX` libraries.
 
-Initialize the world:
+### For Playdate
+1. Add `src/core/ak_physics.c` to your project's source list.
+2. include `ak_physics.h` in your `main.c`.
+
+## Usage API
+
+### 1. Initialize World
 ```c
-jp_world_t world;
-jp_world_init(&world, (jp_vec2_t){0, INT_TO_FIXED(10)}); // Gravity
+ak_world_t world;
+ak_world_init(&world, (ak_vec2_t){0, AK_INT_TO_FIXED(50)}); // Gravity
 ```
 
-Add bodies:
+### 2. Add Bodies
 ```c
-// Add a static ground box
-jp_body_t* ground = jp_world_add_body(&world, 
-    (jp_shape_t){.type = JP_SHAPE_AABB, .aabb = {INT_TO_FIXED(100), INT_TO_FIXED(10)}}, 
-    INT_TO_FIXED(160), INT_TO_FIXED(220), 
-    0); // Mass 0 = Static
+// Static ground
+ak_world_add_body(&world, 
+    (ak_shape_t){.type = AK_SHAPE_AABB, .bounds.aabb = {AK_INT_TO_FIXED(50), AK_INT_TO_FIXED(10)}}, 
+    AK_INT_TO_FIXED(80), AK_INT_TO_FIXED(120), 0);
 
-// Add a dynamic circle
-jp_body_t* ball = jp_world_add_body(&world, 
-    (jp_shape_t){.type = JP_SHAPE_CIRCLE, .radius = INT_TO_FIXED(10)}, 
-    INT_TO_FIXED(160), INT_TO_FIXED(50), 
-    INT_TO_FIXED(1)); // Mass 1
-
-// Add a tether connecting them (Pendulum)
-jp_world_add_tether(&world, ground, ball, INT_TO_FIXED(50)); // Max length 50
-
+// Dynamic Circle
+ak_body_t* ball = ak_world_add_body(&world, 
+    (ak_shape_t){.type = AK_SHAPE_CIRCLE, .bounds.circle = {AK_INT_TO_FIXED(8)}}, 
+    AK_INT_TO_FIXED(80), AK_INT_TO_FIXED(20), AK_INT_TO_FIXED(1));
 ```
 
-Step the simulation:
+### 3. Simulation Step
 ```c
-// Step the simulation
-jp_world_step(&world, INT_TO_FIXED(1)/60);
+ak_fixed_t dt = AK_INT_TO_FIXED(1) / 60;
+ak_world_step(&world, dt);
 ```
 
-## Typical Interactions
-
-You can inspect the state of bodies after a step to react to changes.
-
-### Handling Collisions
-The engine automatically handles physical resolution (bouncing/sliding). For game logic reactions, you can iterate the bodies or check collision flags (future work).
-
-### Handling Off-Screen Objects
-```c
-if (obj->position.x > INT_TO_FIXED(320) || obj->position.x < 0) {
-    // Reset position
-    obj->position.x = INT_TO_FIXED(160);
-    obj->velocity.x = 0;
-}
-```
-
-## Optimization for Jaguar
-- The engine currently runs on the 68000.
-- **GPU Offloading**: The `jp_world_step` function is designed to be moved to the GPU (RISC) processor. It uses isolated data arrays and aligned structs.
-- `jag_fixed.h` macros are efficient, but inline assembly for `muls` and `divs` could speed up math on the 68k.
+## Optimization and Portability
+- **DMA Friendly**: `ak_body_t` padding is optimized for Jaguar DMA when `-DJAGUAR` is defined.
+- **Memory Constraints**: Adjust `AK_MAX_BODIES` and `AK_MAX_TETHERS` at compile time for tight RAM targets.
+- **Fixed-Point Intermediates**: Math routines use `int64_t` intermediates where necessary to prevent overflow during calculations involving screen-width distances.
