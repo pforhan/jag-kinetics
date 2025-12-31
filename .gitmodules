@@ -1,6 +1,6 @@
 [submodule "rmvlib"]
-	path = rmvlib
+	path = src/platforms/jaguar/rmvlib
 	url = https://github.com/theRemovers/rmvlib
 [submodule "jlibc"]
-	path = jlibc
+	path = src/platforms/jaguar/jlibc
 	url = https://github.com/theRemovers/jlibc
