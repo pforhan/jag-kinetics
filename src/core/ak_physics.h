@@ -61,6 +61,10 @@ typedef struct {
 } ak_contact_t;
 
 typedef struct {
+  ak_fixed_t width;
+  ak_fixed_t height;
+  ak_fixed_t slop;
+  ak_fixed_t max_correction;
   ak_vec2_t gravity;
   ak_body_t bodies[AK_MAX_BODIES];
   int body_count;
@@ -77,7 +81,8 @@ ak_fixed_t ak_vec2_len_sqr(ak_vec2_t v);
 ak_fixed_t ak_vec2_len(ak_vec2_t v);
 
 // Physics API
-void ak_world_init(ak_world_t *world, ak_vec2_t gravity);
+void ak_world_init(ak_world_t *world, ak_fixed_t width, ak_fixed_t height,
+                   ak_vec2_t gravity);
 ak_body_t *ak_world_add_body(ak_world_t *world, ak_shape_t shape, ak_fixed_t x,
                              ak_fixed_t y, ak_fixed_t mass);
 void ak_world_add_tether(ak_world_t *world, ak_body_t *a, ak_body_t *b,

@@ -10,6 +10,7 @@ AlphaKinetics.pdx
 
 # Temporary Output
 build/
+pdex.so
 *.log
 
 # Editor/IDE

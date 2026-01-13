@@ -1,11 +1,12 @@
 #include "ak_demo_setup.h"
 
-void ak_demo_create_standard_scene(ak_world_t *world, ak_demo_config_t config) {
-  ak_fixed_t scale_x = AK_FIXED_DIV(config.width, AK_INT_TO_FIXED(320));
-  ak_fixed_t scale_y = AK_FIXED_DIV(config.height, AK_INT_TO_FIXED(240));
+void ak_demo_create_standard_scene(ak_world_t *world) {
+  ak_fixed_t scale_x = AK_FIXED_DIV(world->width, AK_INT_TO_FIXED(320));
+  ak_fixed_t scale_y = AK_FIXED_DIV(world->height, AK_INT_TO_FIXED(240));
 
-  ak_world_init(world, (ak_vec2_t){0, AK_FIXED_MUL(AK_INT_TO_FIXED(50),
-                                                   scale_y)}); // Gravity scaled
+  ak_world_init(world, world->width, world->height,
+                (ak_vec2_t){0, AK_FIXED_MUL(AK_INT_TO_FIXED(50),
+                                            scale_y)}); // Gravity scaled
 
   // 1. Ground (Static AABB)
   ak_world_add_body(

@@ -21,7 +21,11 @@ ak_fixed_t ak_vec2_dot(ak_vec2_t a, ak_vec2_t b) {
 
 // Safe length squared to prevent overflow
 ak_fixed_t ak_vec2_len_sqr(ak_vec2_t v) {
-  const ak_fixed_t LIMIT = 5000000;
+  // A diagonal for 320x240 is 400. 400px = 26,214,400 raw fixed.
+  // We use 64-bit to compute the square safely, but the result must fit in
+  // 32-bit. x^2 >> 16 < 2^31 => x^2 < 2^47 => x < 11,863,283. Since we sum x^2
+  // + y^2, we should limit to ~8M each.
+  const ak_fixed_t LIMIT = 8000000;
   if (v.x > LIMIT || v.x < -LIMIT || v.y > LIMIT || v.y < -LIMIT) {
     return 2147483647; // INT32_MAX
   }
@@ -67,10 +71,19 @@ ak_fixed_t ak_vec2_len(ak_vec2_t v) {
 
 // -- World --
 
-void ak_world_init(ak_world_t *world, ak_vec2_t gravity) {
+void ak_world_init(ak_world_t *world, ak_fixed_t width, ak_fixed_t height,
+                   ak_vec2_t gravity) {
+  world->width = width;
+  world->height = height;
   world->gravity = gravity;
   world->body_count = 0;
   world->tether_count = 0;
+
+  // Scale constants relative to height (standard height 240)
+  ak_fixed_t scale_y = AK_FIXED_DIV(height, AK_INT_TO_FIXED(240));
+  world->slop = AK_FIXED_MUL(scale_y, AK_INT_TO_FIXED(1) / 100); // 0.01 scaled
+  world->max_correction =
+      AK_FIXED_MUL(scale_y, AK_INT_TO_FIXED(5)); // 5.0 scaled
 }
 
 ak_body_t *ak_world_add_body(ak_world_t *world, ak_shape_t shape, ak_fixed_t x,
@@ -128,7 +141,7 @@ static void ResolveTethers(ak_world_t *world) {
     ak_fixed_t correction_mag = AK_FIXED_MUL(excess, stiffness);
 
     // Clamp correction
-    ak_fixed_t max_corr = AK_INT_TO_FIXED(5);
+    ak_fixed_t max_corr = world->max_correction;
     if (correction_mag > max_corr)
       correction_mag = max_corr;
 
@@ -272,7 +285,7 @@ ak_manifold_t SolveCircleAABB(ak_body_t *circle, ak_body_t *aabb) {
   return m;
 }
 
-void ResolveCollision(ak_manifold_t *m) {
+static void ResolveCollision(ak_world_t *world, ak_manifold_t *m) {
   if (!m->has_collision)
     return;
 
@@ -300,8 +313,9 @@ void ResolveCollision(ak_manifold_t *m) {
     m->b->velocity =
         ak_vec2_add(m->b->velocity, ak_vec2_mul(impulse, m->b->inv_mass));
 
-  const ak_fixed_t percent = AK_INT_TO_FIXED(1) / 5; // 0.2
-  const ak_fixed_t slop = AK_INT_TO_FIXED(1) / 100;  // 0.01
+  const ak_fixed_t percent = AK_INT_TO_FIXED(2) / 10; // 0.2
+  const ak_fixed_t slop = world->slop;
+
   ak_fixed_t correction_mag = AK_FIXED_MAX(AK_FIXED_SUB(m->depth, slop), 0);
   ak_fixed_t corr_num = AK_FIXED_MUL(correction_mag, percent);
   correction_mag = AK_FIXED_DIV(corr_num, den);
@@ -365,7 +379,7 @@ void ak_world_step(ak_world_t *world, ak_fixed_t dt) {
       }
 
       if (m.has_collision) {
-        ResolveCollision(&m);
+        ResolveCollision(world, &m);
       }
     }
   }
