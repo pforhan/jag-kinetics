@@ -51,7 +51,8 @@ Integration via Arduino IDE or PlatformIO:
 3. Link with `Arduboy2` and `ArduboyFX` libraries.
 
 **Build using Make:**
-Requires `arduino-cli` installed and configured.
+Requires `arduino-cli` installed and configured.  See [this post](https://community.arduboy.com/t/arduboy-for-cli-users/12488/1) for instructions.
+
 ```bash
 make arduboy
 ```

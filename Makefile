@@ -91,11 +91,14 @@ $(PC_PROG)$(EXT): $(PC_SRC) $(CORE_SRC)
 # Arduboy Build Rule
 arduboy:
 	@echo "Building for Arduboy..."
-	@mkdir -p build/arduboy/AlphaKinetics
+	@mkdir -p build/arduboy/AlphaKinetics build/arduboy/bin
 	@cp src/platforms/arduboy/arduboy_demo.cpp build/arduboy/AlphaKinetics/AlphaKinetics.ino
 	@cp src/core/* build/arduboy/AlphaKinetics/
+	arduino-cli compile --fqbn "arduboy-homemade:avr:arduboy-fx" --output-dir build/arduboy/bin build/arduboy/AlphaKinetics --build-property "compiler.c.extra_flags=-DAK_MAX_BODIES=16" --build-property "compiler.cpp.extra_flags=-DAK_MAX_BODIES=16"
 
-	arduino-cli compile --fqbn "arduboy-homemade:avr:arduboy-fx" build/arduboy/AlphaKinetics --build-property "compiler.cpp.extra_flags=-DAK_MAX_BODIES=16 -I{build.path}/sketch"
+arduboy_flash: arduboy
+	@echo "Flashing to Arduboy..."
+	ardugotools sketch write any --infile build/arduboy/bin/AlphaKinetics.ino.hex --runnow
 
 # Playdate Build Rules
 playdate: playdate_simulator playdate_device
