@@ -63,10 +63,18 @@ Output located in `build/arduboy/AlphaKinetics/`.
 
 **Build using Make:**
 Requires Playdate SDK and `cmake`.
+
+For Simulator (default):
 ```bash
 make playdate
 ```
-Output located in `build/playdate/AlphaKinetics.pdx`.
+Output located in `build/playdate_sim/AlphaKinetics.pdx`.
+
+For Device:
+```bash
+make playdate_device
+```
+Output located in `build/playdate_device/AlphaKinetics.pdx`.
 
 ## Usage API
 

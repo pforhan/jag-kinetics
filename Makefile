@@ -98,11 +98,18 @@ arduboy:
 	arduino-cli compile --fqbn arduboy:avr:arduboy-fx build/arduboy/AlphaKinetics --build-property "compiler.cpp.extra_flags=-DAK_MAX_BODIES=16 -I{build.path}/sketch"
 
 # Playdate Build Rule
+# Playdate Build Rules
 playdate:
-	@echo "Building for Playdate..."
-	@mkdir -p build/playdate
-	unset CC CFLAGS MACFLAGS LINKFLAGS AR; cmake -S src/platforms/playdate -B build/playdate
-	unset CC CFLAGS MACFLAGS LINKFLAGS AR; $(MAKE) -C build/playdate
+	@echo "Building for Playdate Simulator..."
+	@mkdir -p build/playdate_sim
+	unset CC CFLAGS MACFLAGS LINKFLAGS AR; cmake -S src/platforms/playdate -B build/playdate_sim
+	unset CC CFLAGS MACFLAGS LINKFLAGS AR; $(MAKE) -C build/playdate_sim
+
+playdate_device:
+	@echo "Building for Playdate Device..."
+	@mkdir -p build/playdate_device
+	unset CC CFLAGS MACFLAGS LINKFLAGS AR; cmake -S src/platforms/playdate -B build/playdate_device -DDEVICE_BUILD=ON
+	unset CC CFLAGS MACFLAGS LINKFLAGS AR; $(MAKE) -C build/playdate_device
 
 # Pattern Rules
 %.o: %.c
