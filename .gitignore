@@ -6,6 +6,7 @@ alpha_kinetics_pc
 alpha_kinetics_pc.exe
 AlphaKinetics.pdx
 *.cof
+*.elf
 
 # Temporary Output
 build/
