@@ -98,7 +98,9 @@ arduboy:
 	arduino-cli compile --fqbn "arduboy-homemade:avr:arduboy-fx" build/arduboy/AlphaKinetics --build-property "compiler.cpp.extra_flags=-DAK_MAX_BODIES=16 -I{build.path}/sketch"
 
 # Playdate Build Rules
-playdate:
+playdate: playdate_simulator playdate_device
+
+playdate_simulator:
 	@echo "Building for Playdate Simulator..."
 	@mkdir -p build/playdate_sim
 	unset CC CFLAGS MACFLAGS LINKFLAGS AR; cmake -S src/platforms/playdate -B build/playdate_sim

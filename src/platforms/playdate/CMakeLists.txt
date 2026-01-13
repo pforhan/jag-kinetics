@@ -18,13 +18,16 @@ set(CMAKE_C_STANDARD 11)
 
 set(PLAYDATE_GAME_NAME "AlphaKinetics")
 project(${PLAYDATE_GAME_NAME} C ASM)
-set(PLAYDATE_GAME_DEVICE ${PLAYDATE_GAME_NAME})
+
+set(SRC ${SDK}/C_API/buildsupport/setup.c playdate_demo.c ../../core/ak_physics.c ../../core/ak_demo_setup.c)
 
 if(DEVICE_BUILD)
-	add_executable(${PLAYDATE_GAME_NAME} ${SDK}/C_API/buildsupport/setup.c playdate_demo.c ../../core/ak_physics.c ../../core/ak_demo_setup.c)
+	add_executable(${PLAYDATE_GAME_NAME} ${SRC})
 else()
-	add_library(${PLAYDATE_GAME_NAME} SHARED ${SDK}/C_API/buildsupport/setup.c playdate_demo.c ../../core/ak_physics.c ../../core/ak_demo_setup.c)
+	add_library(${PLAYDATE_GAME_NAME} SHARED ${SRC})
 endif()
+
+set(PLAYDATE_GAME_DEVICE ${PLAYDATE_GAME_NAME})
 
 target_include_directories(${PLAYDATE_GAME_NAME} PRIVATE ../../core ${SDK}/C_API)
 
