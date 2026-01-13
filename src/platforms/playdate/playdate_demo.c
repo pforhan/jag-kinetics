@@ -8,7 +8,10 @@ static PlaydateAPI *pd = NULL;
 static int update(void *userdata) {
   pd->graphics->clear(kColorWhite);
 
-  ak_fixed_t dt = AK_INT_TO_FIXED(1) / 30; // 30 FPS
+  // Physics Parity: Standardize on 60Hz internal steps.
+  // Playdate runs at 30fps, so we take two steps per frame.
+  ak_fixed_t dt = AK_INT_TO_FIXED(1) / 60;
+  ak_world_step(&world, dt);
   ak_world_step(&world, dt);
 
   PDButtons pushed;

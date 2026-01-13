@@ -32,7 +32,7 @@ void loop() {
     ak_demo_create_standard_scene(&world);
   }
 
-  // Step Physics
+  // Physics Parity: Standardize on 60Hz internal steps (matching PC/Playdate).
   ak_fixed_t dt = AK_FIXED_DIV(AK_INT_TO_FIXED(1), AK_INT_TO_FIXED(60));
   ak_world_step(&world, dt);
 

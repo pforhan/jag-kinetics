@@ -87,6 +87,12 @@ ak_body_t *ak_world_add_body(ak_world_t *world, ak_shape_t shape, ak_fixed_t x,
                              ak_fixed_t y, ak_fixed_t mass);
 void ak_world_add_tether(ak_world_t *world, ak_body_t *a, ak_body_t *b,
                          ak_fixed_t max_length);
+/**
+ * Step the physics world by dt.
+ * NOTE: For consistent cross-platform behavior (physics parity), always use a
+ * fixed internal timestep (e.g., 1/60s). If a platform runs at a lower frame
+ * rate, call this multiple times with the fixed dt.
+ */
 void ak_world_step(ak_world_t *world, ak_fixed_t dt);
 
 #ifdef __cplusplus

@@ -74,6 +74,7 @@ int main() {
       (ak_vec2_t){0, 0}); // Initialized with 0 gravity, demo setup will set it
   ak_demo_create_standard_scene(&world);
 
+  // Physics Parity: Standardize on 60Hz internal steps.
   ak_fixed_t dt = AK_INT_TO_FIXED(1) / 60; // 1/60th second
 
   // Set non-blocking input
